@@ -1,0 +1,46 @@
+/**
+ * Button
+ *
+ * Basic styling for button's component
+ */
+
+.td-btn {
+  padding: 16px;
+  color: var(--td-white-color);
+  font-family: var(--td-font-family);
+  font-weight: var(--td-btn-font-weight);
+  font-size: var(--td-btn-font-size);
+  border-radius: var(--td-btn-border-radius);
+  min-width: var(--td-btn-min-width);
+  appearance: none;
+  outline: none;
+  border-style: initial;
+  cursor: pointer;
+}
+
+.btn- {
+  &primary {
+    background-color: var(--td-primary-color);
+    border: var(--td-primary-color);
+  }
+
+  &text {
+    background-color: transparent;
+    border: none;
+    color: var(--td-accent-red);
+  }
+
+  &danger {
+    background-color: var(--td-accent-red);
+    border: var(--td-accent-red);
+  }
+
+  &icon {
+    width: var(--td-btn-icon-width);
+    height: var(--td-btn-icon-height);
+    padding: 0;
+    border-radius: var(--td-btn-icon-border-radius);
+    background-color: var(--td-primary-color);
+    border: var(--td-primary-color);
+  }
+}
