@@ -3,9 +3,10 @@ import React, { useReducer, createContext, useContext, useEffect } from "react";
 
 // Hooks
 import todoReducer from "../hooks/todoReducer";
+import { useFetch } from "../../../hooks/useFetch";
 
-// Data
-import todoData from "./todo-data";
+// Async
+import { postTodo, putTodo, deleteTodo } from "../hooks/async";
 
 /** Initialize context */
 const TodoContext = createContext();
@@ -16,18 +17,18 @@ export const useTodo = () => useContext(TodoContext);
 const TodoHooks = ({ children }) => {
   /**
    * @typedef {Object} initialState
-   * @property {TodoEntity} todos
-   * @property {TodoEntity} filteredTodos
+   * @property {[]TodoEntity} todos
+   * @property {[]TodoEntity} filteredTodos
    * @property {number} uncompletedCount
    * @property {number} completedPercent
    * @property {string} currentFilterKey - key that represents current filter action ("FILTER_ALL", "FILTER_ONGOING", "FILTER_COMPLETED")
    */
   const initialState = {
-    todos: todoData,
-    filteredTodos: [...todoData],
-    uncompletedCount: todoData.length,
+    todos: [],
+    filteredTodos: [],
+    uncompletedCount: 0,
     completedPercent: 0,
-    currentFilterKey: "",
+    currentFilterKey: "FILTER_ALL",
   };
 
   const [state, dispatch] = useReducer(todoReducer, initialState);
@@ -41,34 +42,48 @@ const TodoHooks = ({ children }) => {
     currentFilterKey,
   } = state;
 
-  /** Hook to watch changes on todos */
-  useEffect(() => {
-    filterTodo(currentFilterKey);
-  }, [todos]);
-
   /**
-   * dispatch action "DELETE_TODO"
-   * @param {string} id - todo'id to be removed
+   * Post todo to BE and dispatch action to reducer
+   * @param {TodoEntity} todo
+   *
+   * @typedef {Object} TodoEntity
+   * @property {string} id - how todo is distinguished
+   * @property {string} content - todo's content
+   * @property {string} categoryId - todo's category which is represented by category's color
+   * @property {boolean} completed - state of completion in each todo
    */
-  const deleteTodo = (id) => {
-    dispatch({ type: "DELETE_TODO", payload: { id } });
+  const addTodo = (todo) => {
+    postTodo(todo, (resData) => {
+      if (resData) {
+        dispatch({ type: "ADD_TODO", payload: { todo: resData } });
+      }
+    });
   };
 
   /**
    * dispatch action "TOGGLE_COMPLETE"
    * @param {string} id - todo's id to toggle complete state
    */
-  const toggleCompleteTodo = (id) => {
-    dispatch({ type: "TOGGLE_COMPLETE", payload: { id } });
+  const toggleCompleteTodo = ({ id, completed }) => {
+    const updatedTodo = { id, completed };
+
+    putTodo(updatedTodo, (resData) => {
+      if (resData) {
+        dispatch({ type: "TOGGLE_COMPLETE", payload: { id, completed } });
+      }
+    });
   };
 
   /**
-   * dispatch action "ADD_TODO"
-   * @param {string} content
-   * @param {string} categoryId
+   * dispatch action "DELETE_TODO"
+   * @param {string} id - todo'id to be removed
    */
-  const addTodo = ({ content, categoryId }) => {
-    dispatch({ type: "ADD_TODO", payload: { content, categoryId } });
+  const deleteTodoItem = (id) => {
+    deleteTodo(id, (resData) => {
+      if (resData) {
+        dispatch({ type: "DELETE_TODO", payload: { id } });
+      }
+    });
   };
 
   /**
@@ -79,14 +94,34 @@ const TodoHooks = ({ children }) => {
     dispatch({ type: filterKey });
   };
 
+  /** Hook to watch changes on todos */
+  useEffect(() => {
+    filterTodo(currentFilterKey);
+  }, [todos]);
+
+  /** Set todos after fetching */
+  const onTodosFetched = (fetchedTodos) => {
+    if (fetchedTodos && fetchedTodos.length > 0) {
+      dispatch({ type: "SET_TODOS", payload: { todos: fetchedTodos } });
+    }
+  };
+
+  /** Fetch todos on page load */
+  const { status: todosFetchStatus, data: fetchedTodos } = useFetch({
+    url: "/todos",
+    method: "get",
+    callback: onTodosFetched,
+  });
+
   return (
     <TodoContext.Provider
       value={{
+        todosFetchStatus,
         todos,
         filteredTodos,
         uncompletedCount,
         completedPercent,
-        deleteTodo,
+        deleteTodoItem,
         toggleCompleteTodo,
         addTodo,
         filterTodo,

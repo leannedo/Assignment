@@ -12,9 +12,9 @@ import "./ToDoItem.scss";
 import { useModal } from "../../../../modules/modal/contexts/ModalContext";
 import { useTodo } from "../../../../modules/todo/contexts/TodoContext";
 
-const ToDoItem = ({ className, content, id, colorIndicator, completed }) => {
+const ToDoItem = ({ className, name, id, colorIndicator, completed }) => {
   const { confirmModal, showModal, closeModal } = useModal();
-  const { deleteTodo, toggleCompleteTodo } = useTodo();
+  const { deleteTodoItem, toggleCompleteTodo } = useTodo();
 
   /** Initialize hover state for icon */
   const [isHover, setIsHover] = useState(false);
@@ -24,7 +24,7 @@ const ToDoItem = ({ className, content, id, colorIndicator, completed }) => {
    * @param {string} id
    */
   const deleteTodoHandler = (id) => {
-    deleteTodo(id);
+    deleteTodoItem(id);
     closeModal({ key: confirmModal.key });
   };
 
@@ -32,8 +32,9 @@ const ToDoItem = ({ className, content, id, colorIndicator, completed }) => {
    * Toggle completed state of todo
    * @param {string} id
    */
-  const completeTodo = (id) => {
-    toggleCompleteTodo(id);
+  const toggleCompletedState = (id) => {
+    const updatedCompletedState = !completed;
+    toggleCompleteTodo({ id, completed: updatedCompletedState });
   };
 
   return (
@@ -48,13 +49,13 @@ const ToDoItem = ({ className, content, id, colorIndicator, completed }) => {
         className="td-todo-item-input-checkbox"
         checked={completed}
       />
-      <span className="checked" onClick={() => completeTodo(id)} />
+      <span className="checked" onClick={() => toggleCompletedState(id)} />
       <span
         style={{ backgroundColor: `${colorIndicator}` }}
         className="td-todo-item-color-indicator"
       />
       <label htmlFor={id} className="td-todo-item-text">
-        {content}
+        {name}
       </label>
       <div
         style={{
@@ -86,7 +87,7 @@ const ToDoItem = ({ className, content, id, colorIndicator, completed }) => {
 ToDoItem.defaultProps = {
   className: "",
   colorIndicator: "",
-  content: "",
+  name: "",
   id: "",
   completed: false,
 };
@@ -95,8 +96,8 @@ ToDoItem.propTypes = {
   /** component's default classname */
   className: PropTypes.string,
 
-  /** todo's content passed down to label */
-  content: PropTypes.string,
+  /** todo's name passed down to label */
+  name: PropTypes.string,
 
   /** todo's colorIndicator passed down to color box */
   colorIndicator: PropTypes.string,

@@ -1,6 +1,3 @@
-// Libraries
-import { v4 as uuidv4 } from "uuid";
-
 // Helper functions
 import { calculateCompletedPercent } from "./helpers";
 
@@ -20,10 +17,26 @@ const todoReducer = (currentState, { type, payload }) => {
   let completedCount = 0;
 
   switch (type) {
-    case "DELETE_TODO":
-      const { id: deletedId } = payload;
+    case "SET_TODOS":
+      const { todos: fetchedTodos } = payload;
 
-      updatedTodos = state.todos.filter((todo) => todo.id !== deletedId);
+      uncompletedCount = fetchedTodos.filter((todo) => !todo.completed).length;
+      completedCount = fetchedTodos.length - uncompletedCount;
+
+      return {
+        ...state,
+        todos: fetchedTodos,
+        uncompletedCount: uncompletedCount,
+        completedPercent: calculateCompletedPercent(
+          completedCount,
+          fetchedTodos.length
+        ),
+      };
+
+    case "ADD_TODO":
+      const { todo: addedTodo } = payload;
+
+      updatedTodos = [...state.todos, addedTodo];
       uncompletedCount = updatedTodos.filter((todo) => !todo.completed).length;
       completedCount = updatedTodos.length - uncompletedCount;
 
@@ -39,10 +52,10 @@ const todoReducer = (currentState, { type, payload }) => {
       };
 
     case "TOGGLE_COMPLETE":
-      const { id: completedId } = payload;
+      const { id: completedId, completed } = payload;
 
       updatedTodos = state.todos.map((todo) =>
-        todo.id === completedId ? { ...todo, completed: !todo.completed } : todo
+        todo.id === completedId ? { ...todo, completed } : todo
       );
       uncompletedCount = updatedTodos.filter((todo) => !todo.completed).length;
       completedCount = updatedTodos.length - uncompletedCount;
@@ -58,18 +71,10 @@ const todoReducer = (currentState, { type, payload }) => {
         ),
       };
 
-    case "ADD_TODO":
-      const { content, categoryId } = payload;
+    case "DELETE_TODO":
+      const { id: deletedId } = payload;
 
-      updatedTodos = [
-        ...state.todos,
-        {
-          id: uuidv4(),
-          content: content,
-          categoryId: categoryId,
-          completed: false,
-        },
-      ];
+      updatedTodos = state.todos.filter((todo) => todo.id !== deletedId);
       uncompletedCount = updatedTodos.filter((todo) => !todo.completed).length;
       completedCount = updatedTodos.length - uncompletedCount;
 
